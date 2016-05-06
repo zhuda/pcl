@@ -2,7 +2,7 @@
  * Software License Agreement (BSD License)
  *
  *  Point Cloud Library (PCL) - www.pointclouds.org
- *  Copyright (c) 2012, Open Perception, Inc.
+ *  Copyright (c) 2010-2012, Willow Garage, Inc.
  *
  *  All rights reserved.
  *
@@ -16,7 +16,7 @@
  *     copyright notice, this list of conditions and the following
  *     disclaimer in the documentation and/or other materials provided
  *     with the distribution.
- *   * Neither the name of Open Perception, Inc. nor the names of its
+ *   * Neither the name of the copyright holder(s) nor the names of its
  *     contributors may be used to endorse or promote products derived
  *     from this software without specific prior written permission.
  *
@@ -37,28 +37,40 @@
  *
  */
 
-#include <pcl/registration/correspondence_rejection_surface_normal.h>
+#include <gtest/gtest.h>
+#include <pcl/common/geometry.h>
+#include <pcl/point_types.h>
 
-//////////////////////////////////////////////////////////////////////////////////////////////
-void
-pcl::registration::CorrespondenceRejectorSurfaceNormal::getRemainingCorrespondences (
-    const pcl::Correspondences& original_correspondences,
-    pcl::Correspondences& remaining_correspondences)
+using namespace pcl;
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template <typename T> class XYZPointTypesTest : public ::testing::Test { };
+typedef ::testing::Types<BOOST_PP_SEQ_ENUM(PCL_XYZ_POINT_TYPES)> XYZPointTypes;
+TYPED_TEST_CASE(XYZPointTypesTest, XYZPointTypes);
+
+TYPED_TEST(XYZPointTypesTest, Distance)
 {
-  if (!data_container_)
-  {
-    PCL_ERROR ("[pcl::registratin::%s::getRemainingCorrespondences] DataContainer object is not initialized!\n", getClassName ().c_str ());
-    return;
-  }
-
-  unsigned int number_valid_correspondences = 0;
-  remaining_correspondences.resize (original_correspondences.size ());
-
-  // Test each correspondence
-  for (size_t i = 0; i < original_correspondences.size (); ++i)
-  {
-    if (data_container_->getCorrespondenceScoreFromNormals (original_correspondences[i]) > threshold_)
-      remaining_correspondences[number_valid_correspondences++] = original_correspondences[i];
-  }
-  remaining_correspondences.resize (number_valid_correspondences);
+  TypeParam p1, p2;
+  p1.x = 3; p1.y = 4; p1.z = 5;
+  p2.y = 1; p2.x = 1; p2.z = 1.5;
+  double distance = geometry::distance (p1, p2);
+  EXPECT_NEAR (distance, 5.024938, 1e-4);
 }
+
+TYPED_TEST(XYZPointTypesTest, SquaredDistance)
+{
+  TypeParam p1, p2;
+  p1.x = 3; p1.y = 4; p1.z = 5;
+  p2.y = 1; p2.x = 1; p2.z = 1.5;
+  double distance = geometry::squaredDistance (p1, p2);
+  EXPECT_NEAR (distance, 25.25, 1e-4);
+}
+
+/* ---[ */
+int
+main (int argc, char** argv)
+{
+  testing::InitGoogleTest (&argc, argv);
+  return (RUN_ALL_TESTS ());
+}
+/* ]--- */
